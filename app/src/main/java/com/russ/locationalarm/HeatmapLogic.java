@@ -39,7 +39,7 @@ public class HeatmapLogic {
 
     public static ArrayList<SerialLatLng> listLatLngs = new ArrayList<SerialLatLng>();
 
-    public final static double MIN_DIST = 0.0000025;
+    public final static double MIN_DIST = 0.00025;
 
 
 

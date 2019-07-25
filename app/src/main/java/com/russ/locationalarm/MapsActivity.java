@@ -10,13 +10,18 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.preference.PreferenceFragmentCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -30,6 +35,8 @@ import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.maps.android.heatmaps.HeatmapTileProvider;
 import android.location.LocationListener;
+import androidx.appcompat.widget.Toolbar;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,7 +46,7 @@ import java.util.TimerTask;
 
 
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
         SharedPreferences.OnSharedPreferenceChangeListener  {
 
     private GoogleMap mMap;
@@ -48,8 +55,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     /**
      * The desired interval for location updates. Inexact. Updates may be more or less frequent.
      */
-    private static final long UPDATE_INTERVAL_FAST = 10000; //in ms
-    private static final long FASTEST_UPDATE_INTERVAL_FAST = 10000; //in ms
+    private static final long UPDATE_INTERVAL_FAST = 20000; //in ms
+    private static final long FASTEST_UPDATE_INTERVAL_FAST = 20000; //in ms
     private static final long MAX_WAIT_TIME_FAST = UPDATE_INTERVAL_FAST * 3;
 
     private static final long UPDATE_INTERVAL_SLOW = 120000; //in ms
@@ -82,13 +89,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private TextView currentModeTextView;
     private Button resetHeatMapButton;
 
-    private Timer updateTimer;
+    private String currentMode = "ArrayList";
+
+    //private Timer updateTimer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+
         loadStoredLatLngs();
+
+
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -96,8 +111,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         currentLatLngTextView = (TextView)findViewById(R.id.current_latlng_textView);
         currentModeTextView = (TextView)findViewById(R.id.current_mode_textView);
+        /*
         resetHeatMapButton = (Button)findViewById(R.id.reset_button);
-
         resetHeatMapButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -106,14 +121,65 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 buildAndDisplayHeatMap();
             }
         });
-
+        */
         if(updatingFast==true){
-            currentModeTextView.setText("location update mode = Fast (every 15sec)");
+            currentModeTextView.setText("location update mode = Fast (every "+ UPDATE_INTERVAL_FAST/1000 +"sec)");
 
         }
         else
-            currentModeTextView.setText("location update mode = Slow (every 60sec)");
+            currentModeTextView.setText("location update mode = Slow (every"+UPDATE_INTERVAL_SLOW/60000+"minutes)");
 
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(final Menu menu) {
+        //getMenuInflater().inflate(R.menu.class, menu);
+        menu.clear();
+        getMenuInflater().inflate(R.menu.menu,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                // User chose the "Settings" item, show the app settings UI...
+
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                //    getSupportFragmentManager()
+            //            .beginTransaction()
+            //            .replace(R.id.my_layout, new SettingsActivity.SettingsFragment())
+            //            .commit();
+                return true;
+
+            case R.id.action_reset:
+                HeatmapLogic.resetStoredLatLngs();
+                buildAndDisplayHeatMap();
+                return true;
+
+            case R.id.action_mode:
+                // User chose the "Favorite" action, mark the current item
+                // as a favorite...
+                System.out.println("updating mode!");
+                if(currentMode.equals("ArrayList")) {
+                    System.out.println("switching to HashSet mode");
+                    currentMode = "HashSet";
+                    buildAndDisplayHeatMap();
+                }
+                else if(currentMode.equals("HashSet")){
+                    System.out.println("switching to ArrayList mode");
+                    currentMode = "ArrayList";
+                    buildAndDisplayHeatMap();
+                }
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     /**
@@ -222,8 +288,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void updateDisplay() {
 
-        updateTimer = new Timer();
-        updateTimer.schedule(new TimerTask() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
 
             @Override
             public void run() {
@@ -247,12 +313,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 updateLocation(latitude, longitude);
 
                             }
+                        else{
+                            //show a toast that says waiting for first location update.
+                                Context context = getApplicationContext();
+                                CharSequence text = "Waiting for first location update...";
+                                int duration = Toast.LENGTH_LONG;
+
+
+                                Toast toast = Toast.makeText(context, text, duration);
+                                toast.show();
+                            }
                         // This code will always run on the UI thread, therefore is safe to modify UI elements.
                         //myTextBox.setText("my text");
                     }
                 });
             }
-        }, 0, 10000); // End of your timer code.
+        }, 1000, 10000); // End of your timer code.
 
     }
 
@@ -278,7 +354,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    @Override
+    protected void onDestroy(){
 
+
+       // updateTimer.cancel();
+       // updateTimer.purge();
+
+        super.onDestroy();
+
+    }
 
     // Handling the received Intents for the "my-integer" event
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
@@ -288,13 +373,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             int msg = intent.getIntExtra("message",-1/*default value*/);
             System.out.println("MESSAGE RECEIVED = " + msg);
             if(msg==0 && updatingFast) {
+                System.out.println("MESSAGE RECEIVED, SIWTCHING TO SLOW");
                 updatingFast = false;
-                currentModeTextView.setText(" Location update mode = Slow (every 2 minutes)");
+                currentModeTextView.setText(" Location update mode = Slow (every "+UPDATE_INTERVAL_SLOW/60000+" minutes)");
                 switchToSlowLocationUpdates();
             }
             else if(msg==1 && !updatingFast) {
                 updatingFast = true;
-                currentModeTextView.setText(" Location update mode = Fast (every 25 seconds)");
+                currentModeTextView.setText(" Location update mode = Fast (every "+UPDATE_INTERVAL_FAST/1000+" seconds)");
                 switchToFastLocationUpdates();
             }
         }
@@ -302,12 +388,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onStop() {
-
-
-        updateTimer.cancel();
-        updateTimer.purge();
-        updateTimer = null;
-
 
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
@@ -330,12 +410,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public void buildAndDisplayHeatMap(){
 
-        if(!HeatmapLogic.getListLatLngs().isEmpty()) {
-            HeatmapTileProvider mProvider = new HeatmapTileProvider.Builder().data(
-                    HeatmapLogic.serialLatLngToLatLng(HeatmapLogic.getListLatLngs())).build();
-            mProvider.setRadius(10);
+        HeatmapTileProvider mProvider = null;
+
+        if(currentMode.equals("ArrayList"))
+            if(!HeatmapLogic.getListLatLngs().isEmpty()) {
+                mProvider = new HeatmapTileProvider.Builder().data(
+                        HeatmapLogic.serialLatLngToLatLng(HeatmapLogic.getListLatLngs())).build();
+
+                System.out.println("arraylist size = " + HeatmapLogic.getListLatLngs().size());
+
+            }
+        if(currentMode.equals("HashSet"))
+                if(!HeatmapLogic.getHashSetLatLngs().isEmpty()) {
+                    mProvider = new HeatmapTileProvider.Builder().data(
+                            HeatmapLogic.serialLatLngToLatLng(HeatmapLogic.getHashSetLatLngs())).build();
+
+                    System.out.println("hashset size = " + HeatmapLogic.getHashSetLatLngs().size());
+                }
+        if(mProvider!=null){
+            mProvider.setRadius(15);
             tileOverlay.remove();
             tileOverlay = mMap.addTileOverlay(new TileOverlayOptions().tileProvider(mProvider));
+
         }
     }
 

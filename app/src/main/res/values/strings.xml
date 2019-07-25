@@ -1,12 +1,32 @@
 <resources>
-    <string name="app_name">Location Tracker</string>
-    <string name="title_activity_maps">Self Stalker</string>
+    <string name="app_name">Hot Locs</string>
+    <string name="title_activity_maps">Hot Locs</string>
     <string name="unknown_location">Unknown Location</string>
     <string name="settings">Settings</string>
     <string name="permission_rationale">All the time location permission required for core functionality</string>
-    <string name="permission_denied_explanation">All the time location permission denied; needed for core functionality.</string>
+    <string name="permission_denied_explanation">All the time location permission denied; needed for core
+        functionality.
+    </string>
     <string name="ok">OK</string>
     <string name="current_lat_lng">Current Latitude/Longitude</string>
     <string name="current_mode">Current Mode</string>
-    <string name="reset_button">Reset heat map</string>
+    <string name="reset_button">Reset Locations</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_mode">Mode</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails</string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+
 </resources>

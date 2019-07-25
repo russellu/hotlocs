@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+            app:key="notifications"
+            app:title="Enable message notifications"/>
+
+    <Preference
+            app:key="feedback"
+            app:title="Send feedback"
+            app:summary="Report technical issues or suggest new features"/>
+    <EditTextPreference
+            android:defaultValue="Fast update time"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="fast update time" android:key="edit_text_preference_1"/>
+    <EditTextPreference
+            android:defaultValue="Slow update time"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="slow update time" android:key="edit_text_preference_2" android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+</PreferenceScreen>
